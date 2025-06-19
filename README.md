@@ -14,3 +14,5 @@ table.php - handles the latest data table, index.php calls this file as an inclu
 xai_article.php - passes a legacy news article to the xAI API to perform sentiment and emotion analysis<br/>
 xai_x_posts.php - searches X (via xAI API) for posts describing a particular news story. Finds the average sentiment and dominant emotion among these posts<br/>
 x_post.php - responsible for automatically posting the data to X. This should also be executed via cron slightly after main.php. Personally, I run them at 10:00 pm and 10:05 pm. Note that this requires an X API key in config.php as well as the TwitterOAuth package (easy install via composer)<br/>
+
+@h45hb4ng on X or hi[at]legacyvsx.news
