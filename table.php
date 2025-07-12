@@ -4,7 +4,7 @@
                 $conn = connectDB();
 
                 // SQL query to get all rows where date equals the maximum date
-                $sql = "SELECT * FROM headlines WHERE date = (SELECT MAX(date) FROM headlines)";
+                $sql = "SELECT * FROM headlines WHERE date = (SELECT MAX(date) FROM headlines) AND (abs(a_sent-x_sent) > 0.1 AND lower(a_emo) != lower(x_emo))";
 
                 // Execute the query
                 $result = executeQuery($sql, $conn);
