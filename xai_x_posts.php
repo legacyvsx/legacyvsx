@@ -12,7 +12,7 @@ function xai_analyze_x_posts_from_article($url,$a_sent,$a_emo) {
 	global $xai_apiKey;
 	$xai_api_key = $xai_apiKey;
     $xai_endpoint = 'https://api.x.ai/v1/chat/completions';
-    $model = 'grok-3-latest';
+    $model = 'grok-4-0709';
 
     // Validate URL
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
