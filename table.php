@@ -88,9 +88,42 @@
                     </thead>
                     <tbody>
                         <?php
-                                foreach($headlines as $headline)
+                                function areEmotionsInSameGroup($emotion1, $emotion2) {
+								    $emotionGroups = array(
+								        'anger_group' => array('anger', 'frustrated', 'contempt'),
+								        'disgust_group' => array('disgust'),
+								        'fear_group' => array('fear', 'uncomfortable','concern','worry','anxiety'),
+								        'happiness_group' => array('happiness', 'joy', 'excitement'),
+								        'sadness_group' => array('sadness', 'sorrow', 'boredom'),
+								        'surprise_group' => array('surprise'),
+								        'love_group' => array('love', 'affection', 'compassion', 'empathy', 'gratitude'),
+								        'pride_group' => array('pride'),
+								        'guilt_group' => array('guilt', 'shame'),
+								        'peace_group' => array('peace', 'calmness', 'neutral'),
+								        'sarcasm_group' => array('sarcasm')
+								    );
+								
+								    $emotion1 = strtolower($emotion1);
+								    $emotion2 = strtolower($emotion2);
+								
+								    $group1 = null;
+								    $group2 = null;
+								
+								    foreach ($emotionGroups as $groupName => $emotions) {
+								        if (in_array($emotion1, $emotions)) {
+								            $group1 = $groupName;
+								        }
+								        if (in_array($emotion2, $emotions)) {
+								            $group2 = $groupName;
+								        }
+								    }
+								
+								    return $group1 !== null && $group2 !== null && $group1 == $group2;
+								}
+								foreach($headlines as $headline)
                                 {
-
+									$emo1 = $headline['a_emo']; $emo2 = $headline['x_emo'];
+									if (areEmotionsInSameGroup($emo1,$emo2)) continue;
                         ?>
                         <tr>
                             <td><?php echo date('F j, Y @ g:iA', strtotime($headline['pub_date'])); ?></td>
