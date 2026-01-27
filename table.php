@@ -4,7 +4,7 @@
                 $conn = connectDB();
 
                 // SQL query to get all rows where date equals the maximum date
-                $sql = "SELECT * FROM headlines WHERE date = (SELECT MAX(date) FROM headlines) AND (abs(a_sent-x_sent) > 0.1 AND lower(a_emo) != lower(x_emo)) AND x_sent != 0";
+                $sql = "SELECT * FROM headlines WHERE date = (SELECT MAX(date) FROM headlines) AND (abs(a_sent-x_sent) > 0.3 OR lower(a_emo) != lower(x_emo)) AND x_sent != 0 AND a_sent != 0 AND x_emo != \"\" AND a_emo != \"\"";
 
                 // Execute the query
                 $result = executeQuery($sql, $conn);
@@ -17,7 +17,9 @@
                                 $headlines[] = $row;
                         }
                 }
-
+		function str_starts_with($haystack, $needle) {
+ 		   return $needle === '' || strpos($haystack, $needle) === 0;
+		}
 ?>
 <style>
 * {
@@ -79,8 +81,9 @@
                             <th>Timestamp</th>
                             <th>Article Title</th>
                             <th>Legacy Sentiment</th>
-                            <th>Legacy Emotion</th>
                             <th>X Sentiment</th>
+							<th>Legacy Emotion</th>
+                            <!-- <th>X Sentiment</th> --> 
                             <th>X Emotion</th>
 
                             <th>Analysis</th>
@@ -88,42 +91,10 @@
                     </thead>
                     <tbody>
                         <?php
-                                function areEmotionsInSameGroup($emotion1, $emotion2) {
-								    $emotionGroups = array(
-								        'anger_group' => array('anger', 'frustrated', 'contempt'),
-								        'disgust_group' => array('disgust'),
-								        'fear_group' => array('fear', 'uncomfortable','concern','worry','anxiety'),
-								        'happiness_group' => array('happiness', 'joy', 'excitement'),
-								        'sadness_group' => array('sadness', 'sorrow', 'boredom'),
-								        'surprise_group' => array('surprise'),
-								        'love_group' => array('love', 'affection', 'compassion', 'empathy', 'gratitude'),
-								        'pride_group' => array('pride'),
-								        'guilt_group' => array('guilt', 'shame'),
-								        'peace_group' => array('peace', 'calmness', 'neutral'),
-								        'sarcasm_group' => array('sarcasm')
-								    );
-								
-								    $emotion1 = strtolower($emotion1);
-								    $emotion2 = strtolower($emotion2);
-								
-								    $group1 = null;
-								    $group2 = null;
-								
-								    foreach ($emotionGroups as $groupName => $emotions) {
-								        if (in_array($emotion1, $emotions)) {
-								            $group1 = $groupName;
-								        }
-								        if (in_array($emotion2, $emotions)) {
-								            $group2 = $groupName;
-								        }
-								    }
-								
-								    return $group1 !== null && $group2 !== null && $group1 == $group2;
-								}
-								foreach($headlines as $headline)
+                                foreach($headlines as $headline)
                                 {
-									$emo1 = $headline['a_emo']; $emo2 = $headline['x_emo'];
-									if (areEmotionsInSameGroup($emo1,$emo2)) continue;
+					if  (str_starts_with($headline['url'],"https://www.bbc.com"))
+						continue; //manually skip BBC reporting for now
                         ?>
                         <tr>
                             <td><?php echo date('F j, Y @ g:iA', strtotime($headline['pub_date'])); ?></td>
@@ -144,7 +115,7 @@
                                         }
 
                                 ?>"><?php echo $headline['a_sent']; ?></td>
-                            <td><span><?php echo ucfirst($headline['a_emo']); ?></span></td>
+                            
                             <td class="
                                 <?php
                                         if ($headline['x_sent'] < 0.4)
@@ -161,7 +132,8 @@
                                         }
 
                                 ?>"><?php echo $headline['x_sent']; ?></td>
-                            <td><span><?php echo ucfirst($headline['x_emo']); ?></span></td>
+                            <td><span><?php echo ucfirst($headline['a_emo']); ?></span></td>
+							<td><span><?php echo ucfirst($headline['x_emo']); ?></span></td>
 
                             <td><?php echo $headline['commentary']; ?></td>
                         </tr>

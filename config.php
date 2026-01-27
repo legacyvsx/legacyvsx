@@ -1,8 +1,9 @@
 <?php
 $news_apiKey="";
 $xai_apiKey="";
-$table_url = ""; // full url of the table.php file, used to take a screenshot + post to X
-// YOU MUST ALSO CONFIGURE YOUR API ACCESS TOKEN + SECRET INFO IN x_post.php
+$x_apiKey = "";
+$table_url = "https://morallyrelative.com/legacyvsx/table.php"; // full url of the table.php file, used to take a screenshot + post to X
+
 function getTextBetween($string, $start, $end, $inclusive = false) {
     $startPos = strpos($string, $start);
     

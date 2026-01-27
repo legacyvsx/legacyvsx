@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legacy VS. X - News Analysis</title>
+    	<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@h45hb4ng">
+<meta name="twitter:creator" content="@h45hb4ng">
+<meta name="twitter:title" content="Legacy vs X">
+<meta name="twitter:description" content="LegacyVSX is an open source app that tracks and compares how global news stories are presented in legacy media vs X.">
+<meta name="twitter:image" content="https://morallyrelative.com/legacyvsx/logo.jpg">
+
+
+	<title>Legacy VS. X - News Analysis</title>
     <style>
         * {
             margin: 0;
@@ -520,7 +528,7 @@
                 <img src="logo.jpg" style="max-width:45%;max-height:45%"><br/><br/>
 				<h2>Media Analysis Reimagined</h2>
                 <p>
-				In today's rapidly evolving media landscape, understanding how different platforms shape public discourse has become crucial for informed citizenship. Traditional legacy media outlets - newspapers, television networks, and established digital publications - operate under editorial standards developed over decades. Meanwhile, social media platforms like X provide real-time, unfiltered reactions from millions of users, creating a dynamic environment where news spreads instantly but with varying degrees of accuracy and emotional intensity. This AI-powered app monitors top global headlines and finds corresponding X posts, comparing how the same stories are covered, discussed, and received across these fundamentally different media environments. By examining sentiment patterns, emotional responses, and narrative framing, we can discover hidden patterns that influence how society processes information, forms opinions, and makes decisions. This comparative approach doesn't seek to determine which platform is "better," but rather to illuminate how each contributes to the complex tapestry of modern news consumption, helping readers develop media literacy skills essential for navigating our interconnected information age. Specifically, news stories are analyzed for overall sentiment (on a 0-1 scale where 0=very negative, 1=very positive) as well as the dominant emotion expressed, from both legacy sources and X posts. The data is then conveniently displayed in a table below (see the Latest Data section) for users to peruse, along with a commentary on the differences. The data automatically updates each day at 10pm CST (to capture a full day's worth of news stories), and is automatically posted here as well as on our X account, <a href="https://x.com/legacy_vs_x">@Legacy_VS_X</a>.</p>
+				In today's rapidly evolving media landscape, understanding how different platforms shape public discourse has become crucial for informed citizenship. Traditional legacy media outlets - newspapers, television networks, and established digital publications - operate under editorial standards developed over decades. Meanwhile, social media platforms like X provide real-time, unfiltered reactions from millions of users, creating a dynamic environment where news spreads instantly but with varying degrees of accuracy and emotional intensity. This AI-powered app monitors top global headlines and finds corresponding X posts, comparing how the same stories are covered, discussed, and received across these fundamentally different media environments. By examining sentiment patterns, emotional responses, and narrative framing, we can discover hidden patterns that influence how society processes information, forms opinions, and makes decisions. This comparative approach doesn't seek to determine which platform is "better," but rather to illuminate how each contributes to the complex tapestry of modern news consumption, helping readers develop media literacy skills essential for navigating our interconnected information age. Specifically, news stories are analyzed for overall sentiment (on a 0-1 scale where 0=very negative, 1=very positive) as well as the dominant emotion expressed, from both legacy sources and X posts. The data is then filtered for news items that are covered substantially differently and conveniently displayed in a table below (see the Latest Data section) for users to peruse, along with a commentary on the differences. The data automatically updates each day at 10pm CST (to capture a full day's worth of news stories), and is automatically posted here as well as on our X account, <a href="https://x.com/h45hb4ng_data">@h45hb4ng_data</a>. Note that while only stories with a substantial difference in coverage are displayed here (in the latest data section), the full data for each article is in the database in case you'd like to refer to it later. See the source for further details.</p>
             </div>
             <div class="features-grid">
                 <div class="feature-card">
@@ -558,13 +566,13 @@
             <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 2rem;">To access data for a previous date, please refer to our account on X, which automatically posts the current day's data at 10pm CST daily.</p>
             
             
-            <p style="text-align: center; margin-top: 2rem;"><a href="https://x.com/legacyvsx" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 1.1rem;">Explore Full Archive →</a></p>
+            <p style="text-align: center; margin-top: 2rem;"><a href="https://x.com/h45hb4ng_data" style="color: #667eea; text-decoration: none; font-weight: 600; font-size: 1.1rem;">Explore Full Archive →</a></p>
         </section>
 
         <!-- Source Code Section -->
         <section id="source-code">
             <h2>Source Code</h2>
-            <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 2rem;">This project is completely open source and free. It requires only PHP, MySQL, and API keys for <a href="https://x.ai">xAI</a> and <a href="https://newsapi.org">NewsAPI</a>. It is webserver agnostic, so you can use Apache, nginx, or whatever else will run PHP. The code that automatically posts the data to X also requires an API key from X and the free software package <a href="https://wkhtmltopdf.org">wkhtmltopdf/wkhtmltoimage</a> (if you're running Ubuntu, <i>sudo apt install wkhtmltopdf</i> is quick and easy).<br/><br/>
+            <p style="text-align: center; font-size: 1.1rem; color: #666; margin-bottom: 2rem;">This project is completely open source and free. It requires only PHP, MySQL, and API keys for <a href="https://x.ai">xAI</a> and <a href="https://newsapi.org">NewsAPI</a>. It is webserver agnostic, so you can use Apache, nginx, or whatever else will run PHP. The code that automatically posts the data to X also requires an API key from X and the free software packages <a href="https://wkhtmltopdf.org">wkhtmltopdf/wkhtmltoimage</a> and ImageMagick (if you're running Ubuntu, <i>sudo apt install wkhtmltopdf imagemagick</i> is quick and easy).<br/><br/>
 			Here is a quick rundown on the files:
 			<ul style="text-align: left; font-size: 1.1rem; color: #666;">
 				<li><i>config.php</i> - set your API keys here</li>

@@ -1,95 +1,69 @@
 <?php
 require_once("config.php");
 
-/**
- * Analyzes X posts related to a news article URL using the xAI API.
- *
- * @param string $url The URL of the news article.
- * @return void Outputs XML with average X post sentiment, most common emotion, and commentary.
- */
-function xai_analyze_x_posts_from_article($url,$a_sent,$a_emo) {
-    // xAI API configuration
-	global $xai_apiKey;
-	$xai_api_key = $xai_apiKey;
-    $xai_endpoint = 'https://api.x.ai/v1/chat/completions';
-    $model = 'grok-4-0709';
+function xai_analyze_x_posts_from_article($url, $a_sent, $a_emo) {
+    global $xai_apiKey;
+    $xai_api_key = $xai_apiKey;
+    $xai_endpoint = 'https://api.x.ai/v1/responses';
+    $model = 'grok-4-1-fast';
 
-    // Validate URL
     if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        echo '<?xml version="1.0" encoding="UTF-8"?>';
-        echo '<error>Invalid URL provided</error>';
-        return;
+        return ['sentiment' => 0, 'emotion' => 'unknown', 'commentary' => 'Invalid URL'];
     }
 
-    // Prepare xAI API request payload
+    echo "Searching X posts for article topic...\n";
+
     $payload = [
         'model' => $model,
-        'messages' => [
-            [
-                'role' => 'system',
-                'content' => 'You are a helpful AI assistant with expertise in sentiment and emotion analysis, capable of accessing X posts in real-time via DeepSearch.'
-            ],
+        'input' => [
             [
                 'role' => 'user',
-                'content' => "Find recent popular X posts about the same topic as $url. For each post (up to 20), analyze the sentiment (very negative=0, negative=0.25, neutral=0.5, positive=0.75, very positive=1) and dominant emotion. Assume sentiment of the article is $a_sent and $a_emo is its dominant emotion. Compute average sentiment, most common dominant emotion, and a max 3-sentence commentary on the differences in tone, sentiment, and emotion between the article and X posts. Output these as xml tags x_sentiment, x_emotion, commentary. Don't output the content of each post, there should be only 3 tags in the XML output, no sub tags, the first should be only a single numerical value, second is 1 emotion, third is commentary. If sentiment scores are referred to it in the commentary, make sure they are logically correct. For example, do not say X posts have a more negative sentiment than the article's sentiment if that is not true."
+                'content' => "Find and analyze recent X (Twitter) posts discussing this article or its topic: $url
+
+The article has sentiment $a_sent (0=very negative, 1=very positive) and dominant emotion '$a_emo'.
+
+For the X posts you find:
+1. Calculate average sentiment (0-1 scale)
+2. Identify the most common dominant emotion  
+3. Write 2-3 sentences comparing article tone vs X reactions
+
+Output ONLY these XML tags:
+<x_sentiment>NUMBER</x_sentiment>
+<x_emotion>EMOTION</x_emotion>
+<commentary>YOUR COMMENTARY</commentary>"
             ]
         ],
-        'search_parameters' => [
-            'mode' => 'auto',
-            'return_citations' => true,
-            //'sources' => [
-                //['type' => 'web'], // For article content
-              //  ['type' => 'x_posts'] // For X posts
-            //]
-		// I'm honestly not sure why I had to get rid of the sources parameter as it says to use it in the docs, I asked Grok which was no help, but I always got a 422 error with sources enabled.
+        'tools' => [
+            ['type' => 'x_search']
         ],
         'temperature' => 0.7,
-        'max_tokens' => 1500
+        'max_output_tokens' => 800,
+        'store' => false
     ];
 
-    // Make xAI API request
-    $response = make_xai_api_request2($xai_endpoint, $xai_api_key, $payload);
+    $response = make_xai_responses_api_request($xai_endpoint, $xai_api_key, $payload);
+    
     if (is_array($response) && isset($response['error'])) {
-        echo '<?xml version="1.0" encoding="UTF-8"?>';
-        echo "<error>{$response['error']} (Code: {$response['code']}): {$response['details']}</error>";
-        return;
+        echo "API error: {$response['error']} (Code: {$response['code']})\n";
+        if (isset($response['details'])) {
+            echo "Details: {$response['details']}\n";
+        }
+        return ['sentiment' => 0, 'emotion' => 'unknown', 'commentary' => 'API request failed'];
     }
 
-	//echo $response;
-	$result = array();
-	$result['sentiment'] = getTextBetween($response,"<x_sentiment>","</x_sentiment>");
-	$result['emotion'] = getTextBetween($response,"<x_emotion>","</x_emotion>");
-	$result['commentary'] = getTextBetween($response,"<commentary>","</commentary>");
-	return $result;
-	/*
-
-    // Parse response
-    $parsed_response = parse_xai_response($response);
-    if (!$parsed_response) {
-        echo '<?xml version="1.0" encoding="UTF-8"?>';
-        echo '<error>Invalid or incomplete API response</error>';
-        return;
+    if (!$response || !is_string($response)) {
+        return ['sentiment' => 0, 'emotion' => 'unknown', 'commentary' => 'No valid response from API'];
     }
 
-    // Output XML
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<result>';
-    echo "<x_sentiment>{$parsed_response['average_sentiment']}</x_sentiment>";
-    echo "<x_emotion>{$parsed_response['most_common_emotion']}</x_emotion>";
-    echo "<commentary>" . htmlspecialchars($parsed_response['commentary']) . "</commentary>";
-    echo '</result>';
-	*/
+    $result = array();
+    $result['sentiment'] = getTextBetween($response, "<x_sentiment>", "</x_sentiment>") ?: 0;
+    $result['emotion'] = getTextBetween($response, "<x_emotion>", "</x_emotion>") ?: 'unknown';
+    $result['commentary'] = getTextBetween($response, "<commentary>", "</commentary>") ?: 'No commentary available';
+    
+    return $result;
 }
 
-/**
- * Makes a POST request to the xAI API and outputs detailed errors.
- *
- * @param string $endpoint The xAI API endpoint.
- * @param string $api_key The xAI API key.
- * @param array $payload The request payload.
- * @return array|string|null The parsed response content, error array, or null on failure.
- */
-function make_xai_api_request2($endpoint, $api_key, $payload) {
+function make_xai_responses_api_request($endpoint, $api_key, $payload) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $endpoint);
     curl_setopt($ch, CURLOPT_POST, true);
@@ -99,7 +73,7 @@ function make_xai_api_request2($endpoint, $api_key, $payload) {
         'Content-Type: application/json',
         "Authorization: Bearer $api_key"
     ]);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);
 
     $response = curl_exec($ch);
     $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -107,7 +81,6 @@ function make_xai_api_request2($endpoint, $api_key, $payload) {
     $curl_errno = curl_errno($ch);
     curl_close($ch);
 
-    // Handle cURL errors
     if ($response === false || $curl_errno) {
         return [
             'error' => 'cURL request failed',
@@ -116,72 +89,53 @@ function make_xai_api_request2($endpoint, $api_key, $payload) {
         ];
     }
 
-    // Handle HTTP errors
     if ($http_code !== 200) {
         $error_details = json_decode($response, true);
+        $error_message = 'Unknown error';
+        
+        if (isset($error_details['error'])) {
+            if (is_string($error_details['error'])) {
+                $error_message = $error_details['error'];
+            } elseif (isset($error_details['error']['message'])) {
+                $error_message = $error_details['error']['message'];
+            }
+        }
+        
         return [
             'error' => 'API request failed',
             'code' => $http_code,
-            'details' => $error_details['error']['message'] ?? "HTTP $http_code: No error message provided"
+            'details' => $error_message
         ];
     }
 
-    // Parse response
     $data = json_decode($response, true);
-    if (!isset($data['choices'][0]['message']['content'])) {
-        return [
-            'error' => 'Invalid API response',
-            'code' => 200,
-            'details' => 'No content found in response'
-        ];
-    }
-
-    return $data['choices'][0]['message']['content'];
-}
-
-/**
- * Parses the xAI API response to extract sentiment, emotion, and commentary.
- *
- * @param string $response The raw API response content.
- * @return array|null Parsed data or null if invalid.
- */
-function parse_xai_response($response) {
-    // Hypothetical parsing (API response format may vary)
-    try {
-        // Example response structure (based on prompt expectations)
-        $data = json_decode($response, true);
-        if (!$data || !isset($data['average_sentiment'], $data['most_common_emotion'], $data['commentary'])) {
-            // Fallback: Parse text response manually (simplified)
-            $lines = explode("\n", $response);
-            $average_sentiment = 0.5; // Default neutral
-            $most_common_emotion = 'unknown';
-            $commentary = 'No commentary available.';
-
-            foreach ($lines as $line) {
-                if (preg_match('/Average Sentiment: (\d+\.\d+)/', $line, $matches)) {
-                    $average_sentiment = floatval($matches[1]);
-                } elseif (preg_match('/Most Common Emotion: (\w+)/', $line, $matches)) {
-                    $most_common_emotion = $matches[1];
-                } elseif (strpos($line, 'Commentary:') !== false) {
-                    $commentary = trim(str_replace('Commentary:', '', $line));
+    
+    // The output array contains multiple items: tool calls, reasoning, and finally the message
+    // We need to find the 'message' type item with 'content'
+    if (isset($data['output']) && is_array($data['output'])) {
+        foreach ($data['output'] as $output_item) {
+            // Look for items with type 'message' and role 'assistant'
+            if (isset($output_item['type']) && $output_item['type'] === 'message' 
+                && isset($output_item['role']) && $output_item['role'] === 'assistant'
+                && isset($output_item['content']) && is_array($output_item['content'])) {
+                
+                // Now look for output_text in the content array
+                foreach ($output_item['content'] as $content_item) {
+                    if (isset($content_item['type']) && $content_item['type'] === 'output_text') {
+                        if (isset($content_item['text'])) {
+                            return $content_item['text'];
+                        }
+                    }
                 }
             }
-
-            return [
-                'average_sentiment' => $average_sentiment,
-                'most_common_emotion' => $most_common_emotion,
-                'commentary' => $commentary
-            ];
         }
-
-        return $data;
-    } catch (Exception $e) {
-        return null;
     }
+    
+    return [
+        'error' => 'Invalid API response',
+        'code' => 200,
+        'details' => 'Could not extract text from response structure'
+    ];
 }
-
-// Example usage
-//$article_url = 'https://time.com/7294024/pinterest-time100-talk/'; // Replace with a real article URL
-//xai_analyze_x_posts_from_article($article_url);
 
 ?>
